@@ -1,0 +1,25 @@
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    ports:
+      - "6379:6379"
+
+  api:
+    build: .
+    environment:
+      LEASE_REDIS_URL: redis://redis:6379/0
+      LEASE_PORT: "8000"
+      LEASE_DEFAULT_TTL_MS: "30000"
+      LEASE_MIN_TTL_MS: "1000"
+      LEASE_MAX_TTL_MS: "600000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
